@@ -8,7 +8,7 @@
 
 int main(int argc, char **argv){
 
-    int nProcess, status, i;
+    int nProcess, status, i, var = 0;
     pid_t chilpid = 1, flag;
 
     if(argc != 2){
@@ -30,6 +30,7 @@ int main(int argc, char **argv){
 
             case 0:
                 printf("I'm the child number %d, with pid: %d and my father is %d\n\n", i, getpid(), getppid());
+                var++;
             exit(EXIT_SUCCESS);
         }
     }
@@ -54,6 +55,7 @@ int main(int argc, char **argv){
         printf("\nERROR, can't wait the childs. errno = %d, definded as: %s\n", errno, strerror(errno));
     }
 
-    printf("\nEND OF PROGRAM\n");
+    printf("\nGlobal var = %d\n", var);
+
     exit(EXIT_SUCCESS);
 }

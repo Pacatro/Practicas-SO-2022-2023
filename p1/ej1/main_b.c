@@ -52,8 +52,11 @@ int main(int argc, char **argv){
                 else{
                     printf("\nERROR, can't wait the childs. errno = %d, definded as: %s\n", errno, strerror(errno));
                 }
+
+            exit(EXIT_SUCCESS);
         }
     }
     
+    printf("\nEND OF PROGRAM\n");
     exit(EXIT_SUCCESS);
 }
