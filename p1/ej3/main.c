@@ -23,17 +23,10 @@ void child2(char **argv){
 }
 
 int main(int argc, char **argv){
-    /*
-    if(argc != 1){
-        printf("You must write the name of the executables and the files name: (./program.out 'executable1' 'executable2' 'file1.txt', 'file2.txt'...)\n");
-        exit(EXIT_FAILURE);
-    }
-    */
-
     pid_t childpid, flag;
     int status, i;
 
-    for(i = 0; i<2; i++){
+    for(i = 1; i<=2; i++){
         childpid = fork();
 
         switch(childpid){
@@ -43,14 +36,15 @@ int main(int argc, char **argv){
             exit(EXIT_FAILURE);
 
             case 0:
-                printf("I'm the child, PID: %d, PPID: %d.\n", getpid(), getppid());
+                if(i == 1){
+                    printf("I'm the child number %d with PID: %d PPID: %d.\n", i, getpid(), getppid());
+                    child1(argv);
+                }
 
-                child1(argv);
-                child2(argv);
-
-            default:
-                printf("I'm the father with PID: %d\n", getpid());
-        
+                else if(i == 2){
+                    printf("I'm the child number %d with PID: %d PPID: %d.\n", i, getpid(), getppid());
+                    child2(argv);
+                }
         }
     }
     
@@ -71,5 +65,6 @@ int main(int argc, char **argv){
         exit(EXIT_FAILURE);
     }
     
+    printf("\nEND OF THE PROGRAM\n");
     exit(EXIT_SUCCESS);
 }
