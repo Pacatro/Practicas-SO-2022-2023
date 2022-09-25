@@ -27,14 +27,14 @@ int main(int argc, char **argv){
 
             case 0:
                 if(i == 1){
-                    printf("\nI'm the child number %d, PID: %d, PPID: %d Calculating factorial of %s...\n", i, getpid(), getppid(), argv[1]);
+                    printf("\nI'm the child number %d, PID: %d, PPID: %d Calculating %s!...\n", i, getpid(), getppid(), argv[1]);
                     child1(argv);
                 }
                 
                 sleep(1);
 
                 if(i == 2){
-                    printf("\nI'm the child number %d, PID: %d, PPID: %d Calculating factorial of %s...\n", i, getpid(), getppid(), argv[2]);
+                    printf("\nI'm the child number %d, PID: %d, PPID: %d Calculating %s!...\n", i, getpid(), getppid(), argv[2]);
                     child2(argv);
                 }
 
