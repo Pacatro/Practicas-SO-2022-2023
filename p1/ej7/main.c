@@ -7,16 +7,13 @@
 #include <string.h>
 
 void message(int signal){
-    alarm(1);
-    pause();
-    printf("I recibe the message!\n");
-    printf("SIGNAL VALUE = %d", signal);
-    return;
+    printf("\tI recibe the signal!\n");
+    printf("\tSignal = %d\n\n", signal);
 }
 
 int main(){
     pid_t childpid, flag;
-    int status;
+    int status, message_cont = 0;
 
     childpid = fork();
     switch(childpid){
@@ -27,17 +24,28 @@ int main(){
         break;
 
         case 0:
-            printf("I'm the child, PID: %d, PPID: %d\n", getpid(), getppid());
+
             if(signal(SIGUSR1, message) == SIG_ERR){
                 perror("Signal error");
-                printf("errno value = %d", errno);
                 exit(EXIT_FAILURE);
             }
 
+            while(1){
+                pause();
+            }
+        
         break;
 
         default:
-            printf("I'm the father, PID: %d\n", getpid());
+            printf("I'm the father, PID: %d\n\n", getpid());
+
+            for(message_cont = 0; message_cont < 5; message_cont++){
+                kill(childpid, SIGUSR1);
+                printf("%d\n", message_cont);
+                sleep(1);
+            }
+            
+            kill(childpid, SIGKILL);
 
             while((flag = wait(&status)) > 0){
                 if(WIFEXITED(status)){
@@ -54,7 +62,7 @@ int main(){
             } else{
                 printf("ERROR. CAN'T INVOQUE wait() or waitpid(), errno = %d -> %s\n", errno, strerror(errno));
                 exit(EXIT_FAILURE);
-            }
+            }  
 
         break;
     }
