@@ -18,7 +18,7 @@ int main(){
         exit(EXIT_FAILURE);
     }
 
-    
+    printf("Waiting signal...\n");
     while(1){
         pause();
     }

@@ -14,11 +14,21 @@ int main(int argc, char **argv){
 
     pid_t process_pid = atoi(argv[1]);
 
-    kill(process_pid, SIGUSR1);
+    printf("Sending signal...\n");
+    if(kill(process_pid, SIGUSR1) == -1){
+        perror("Signal error");
+        printf("Can't send signal, errno = %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
 
     sleep(1);
 
-    kill(process_pid, SIGKILL);
+    printf("Killing process...\n");
+    if(kill(process_pid, SIGKILL) == -1){
+        perror("Signal error");
+        printf("Can't send signal, errno = %d\n", errno);
+        exit(EXIT_FAILURE);
+    }
 
     exit(EXIT_SUCCESS);
 }
