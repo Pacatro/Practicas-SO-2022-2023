@@ -2,28 +2,41 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <pthread.h>
+#include <string.h>
 
-void *count_lines(void *argv){
-    char *fileName = (char *) argv, line;
-    int nLines = 0;
+int count_lines(void *files){
+    char *fileName;
+    fileName = (char *) files;
+
+    char line[100];
+    int *nLines = (int *)malloc(sizeof(int));
+    *nLines = 0;
+    int number = *nLines, result = 0;
+
+    printf("\nI'm the thread with PID: %lu\n", pthread_self());
 
     FILE *file;
+    file = fopen(fileName, "r");
 
-    if(fopen(fileName, "r") == NULL){
+    if(file == NULL){
         perror("Can't open file");
-        printf("errno = %d", errno);
+        printf("File name -> %s\n", fileName);
+        printf("errno = %d\n", errno);
         exit(EXIT_FAILURE);
     }
 
-    while(line = fgetc(file) != EOF){
-        if(line == '\n'){
-            nLines++;
-        }
+    while(fgets(line, 100, file) != NULL){
+        number++;
     }
 
+    result += number;
 
+    fclose(file);
+
+    printf("Number of lines %s: %d\n", fileName, number);
+
+    return number;
 }
-
 
 int main(int argc, char **argv){
     if(argc < 2){
@@ -33,7 +46,30 @@ int main(int argc, char **argv){
         exit(EXIT_FAILURE);
     }
 
-    int i, total_lines;
-    pthread_t thread;
+    int i, total_lines = 0, *nLines, lines;
+    pthread_t thread[argc - 1];
     printf("I'm the main thread\n");
+    char *argu;
+
+    for(i = 0; i < (argc - 1); i++){
+        argu = argv[i+1];
+
+        if(pthread_create(&(thread[i]), NULL, (void *) count_lines, (void *) argu)){
+            perror("Thread error.");
+            printf("Can't create thread, errno = %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
+        if(pthread_join(thread[i], (void **) nLines)){
+            perror("Join error.");
+            printf("Can't join threads, errno = %d\n", errno);
+            exit(EXIT_FAILURE);
+        }
+
+        total_lines += *nLines;
+    }
+
+    printf("\nTotal lines = %d\n", total_lines);
+
+    exit(EXIT_SUCCESS);
 }

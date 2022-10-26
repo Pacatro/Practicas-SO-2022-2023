@@ -11,7 +11,7 @@ void *randomAdd(void *result){
     float random1, random2, *randAdd;
     randAdd = (float *) result;
 
-    printf("\nI'm a thread!\n");
+    printf("\nI'm a thread, PID: %u\n", (unsigned int) pthread_self());
 
     srand(time(NULL));
 
@@ -32,30 +32,35 @@ void *randomAdd(void *result){
 
 int main(){
     int nThread, i;
-    float result, global_result = 0;
-    pthread_t thread;
+    float result, main_result = 0;
     
     printf("I'm the main thread!\n");
     printf("Number of threads you want to create: ");
     scanf("%d", &nThread);
 
+    pthread_t threads[nThread];
+
     for(i = 0; i<nThread; i++){
-        if(pthread_create(&thread, NULL, (void *) randomAdd, (void *) &result)){
+        if(pthread_create(&(threads[i]), NULL, (void *) randomAdd, (void *) &result)){
             perror("Error creating thread \n");
             printf("errno = %d", errno);
             exit(EXIT_FAILURE);
         }
 
-        if(pthread_join(thread, NULL)){
-            perror("Error joining thread \n");
-            printf("errno = %d", errno);
-            exit(EXIT_FAILURE);
+        main_result += result;
+
+        for(int j = 0; j<nThread; j++){
+            if(pthread_join(threads[i], NULL)){
+                perror("Error joining thread \n");
+                printf("errno = %d", errno);
+                exit(EXIT_FAILURE);
+            }
         }
 
-        global_result += result;
+
     }
 
-    printf("\nGolbal result = %f\n", global_result);
+    printf("\nGolbal result = %f\n", main_result);
     printf("Main thread finished!\n");
 
     exit(EXIT_SUCCESS);
