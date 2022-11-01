@@ -7,32 +7,40 @@ distintos numeros aleatorios.*/
 #include <pthread.h> 
 #include <errno.h>
 
-void *randomAdd(void *result){
-    float random1, random2, *randAdd;
-    randAdd = (float *) result;
-
-    printf("\nI'm a thread, PID: %u\n", (unsigned int) pthread_self());
-
+void generate_random(float *argu){
+    int i;
     srand(time(NULL));
 
-    random1 = rand() % 11;
-    random2 = rand() % 11;
+    for(i = 0; i<2; i++){
+        argu[i] = rand() % 11;
+    }
+}
 
-    printf("Random1 = %f\n", random1);
-    printf("Random2 = %f\n", random2);
+void *randomAdd(void *arg){
+    float *argu = (float *)arg;
+    float *result = malloc(sizeof(float));
+    float rand1, rand2;
 
-    *randAdd = random1 + random2;
+    generate_random(argu);
 
-    printf("Random1 + Random2 = %f\n", *randAdd);
+    printf("\nI'm a thread with TID: %lu\n", pthread_self());
+    rand1 = argu[0];
+    rand2 = argu[1];
 
-    printf("Thread finished!\n");
+    printf("Rand1 = %f\n", rand1);
+    printf("Rand2 = %f\n", rand2);
 
-    pthread_exit(NULL);
+    *result = rand1 + rand2;
+
+    printf("Rand1 + Rand2 = %f\n", *result);
+
+    pthread_exit((void *) result);
 }
 
 int main(){
-    int nThread, i;
-    float result, main_result = 0;
+    int nThread, i, j;
+    float main_result, arg[2], global_result = 0;
+    void *result;
     
     printf("I'm the main thread!\n");
     printf("Number of threads you want to create: ");
@@ -40,28 +48,29 @@ int main(){
 
     pthread_t threads[nThread];
 
+    //Create threads
     for(i = 0; i<nThread; i++){
-        if(pthread_create(&(threads[i]), NULL, (void *) randomAdd, (void *) &result)){
-            perror("Error creating thread \n");
+        if(pthread_create(&(threads[i]), NULL, (void *) randomAdd, (void *) arg)){
+            perror("Thread error");
+            printf("errno = %d", errno);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    for(j = 0; j<nThread; j++){
+        if(pthread_join(threads[j], &result)){
+            perror("Join error");
             printf("errno = %d", errno);
             exit(EXIT_FAILURE);
         }
 
-        main_result += result;
+        main_result = *(float *) result;
 
-        for(int j = 0; j<nThread; j++){
-            if(pthread_join(threads[i], NULL)){
-                perror("Error joining thread \n");
-                printf("errno = %d", errno);
-                exit(EXIT_FAILURE);
-            }
-        }
-
+        global_result += main_result;
 
     }
 
-    printf("\nGolbal result = %f\n", main_result);
-    printf("Main thread finished!\n");
+    printf("\nGlobal result = %f\n", global_result);
 
     exit(EXIT_SUCCESS);
 }
