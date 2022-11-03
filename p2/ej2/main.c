@@ -4,14 +4,12 @@
 #include <pthread.h>
 #include <string.h>
 
-int count_lines(void *files){
-    char *fileName;
-    fileName = (char *) files;
+void *count_lines(void *files){
+    char *fileName, line[100];
+    int lines, *result = malloc(sizeof(int));
+    *result = 0;
 
-    char line[100];
-    int *nLines = (int *)malloc(sizeof(int));
-    *nLines = 0;
-    int number = *nLines, result = 0;
+    fileName = (char *) files;
 
     printf("\nI'm the thread with PID: %lu\n", pthread_self());
 
@@ -26,16 +24,16 @@ int count_lines(void *files){
     }
 
     while(fgets(line, 100, file) != NULL){
-        number++;
+        lines++;
     }
 
-    result += number;
+    *result += lines;
 
+    printf("Number of lines %s: %d\n", fileName, lines);
+    
     fclose(file);
 
-    printf("Number of lines %s: %d\n", fileName, number);
-
-    return number;
+    pthread_exit((void *)result);
 }
 
 int main(int argc, char **argv){
@@ -46,7 +44,8 @@ int main(int argc, char **argv){
         exit(EXIT_FAILURE);
     }
 
-    int i, total_lines = 0, *nLines, lines;
+    int i, j, total_lines = 0, nLines;
+    void *line;
     pthread_t thread[argc - 1];
     printf("I'm the main thread\n");
     char *argu;
@@ -54,20 +53,25 @@ int main(int argc, char **argv){
     for(i = 0; i < (argc - 1); i++){
         argu = argv[i+1];
 
-        if(pthread_create(&(thread[i]), NULL, (void *) count_lines, (void *) argu)){
+        if(pthread_create(&(thread[i]), NULL, count_lines, (void *) argu)){
             perror("Thread error.");
             printf("Can't create thread, errno = %d\n", errno);
             exit(EXIT_FAILURE);
         }
+    }
 
-        if(pthread_join(thread[i], (void **) nLines)){
+    for(j = 0; j<(argc -1); j++){
+        if(pthread_join(thread[j], &line)){
             perror("Join error.");
             printf("Can't join threads, errno = %d\n", errno);
             exit(EXIT_FAILURE);
         }
 
-        total_lines += *nLines;
+        nLines = *(int *) line;
+
+        total_lines += nLines;
     }
+
 
     printf("\nTotal lines = %d\n", total_lines);
 
