@@ -7,11 +7,10 @@ int global = 0; //Global variable
 
 void *loop(){
     printf("\nThread with TID: %lu\n", pthread_self());
-    int i = 0;
+    int i;
 
-    while(i != 1000){
+    for(i = 0; i<10000; i++){
         global++;
-        i++;
     }
 }
 

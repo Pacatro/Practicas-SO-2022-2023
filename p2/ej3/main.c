@@ -16,18 +16,21 @@ void write_in_array(int randArray[]){
     }
 }
 
-/****************************
- NO SE COMO DIVIDIR EL VECTOR
- 
-int sum_elements(void *num){
-    int num = (int ) num;
-    int result, i;
-
-    for(i = 0; i<num; i++){
-        randomArray[i]
+void show_array(int array[], int n){
+    for(int i = 0; i<n; i++){
+        printf("%d ", array[i]);
     }
 }
-*****************************/
+
+void divided_array(int randArray[], int array[], int num){
+    for(int i = 0; i<(N/num); i++){
+        array[i] = randArray[i];
+    }
+}
+
+void *sum_elements_array(void *array){
+
+}
 
 int main(int argc, char **argv){
     if(argc != 2){
@@ -39,22 +42,40 @@ int main(int argc, char **argv){
 
     printf("Main thread!\n");
 
-    int num = atoi(argv[1]), i, randArray[N];
+    int num = atoi(argv[1]), i, j ,randArray[N];
     pthread_t threads[num];
 
     write_in_array(randArray);
 
-    for(i = 0; i<num; i++){
-        if(pthread_create(&(threads[i]), NULL, (void *) sum_elements, (void *) num)){
-            perror("Thread error.");
-            printf("Can't create thread, errno = %d\n", errno);
-            exit(EXIT_FAILURE);
-        }
+    printf("Vector 1: ");
+    show_array(randArray, N);
 
-        if(pthread_join(threads[i], NULL)){
-            perror("Join error.");
-            printf("Can't join threads, errno = %d\n", errno);
+    int array[N/num];
+
+    divided_array(randArray, array, num);
+
+    printf("\nVector 2: ");
+    show_array(array, N/num);
+
+/*
+    for(i = 0; i<num; i++){
+        if(pthread_create(&threads[i], NULL, sum_elements_array, randArray)){
+            perror("Thread error");
+            printf("errno = %d", errno);
             exit(EXIT_FAILURE);
         }
     }
+
+    for(j = 0; j<num; j++){
+        if(pthread_join(threads[j], NULL)){
+            perror("Join error");
+            printf("errno = %d", errno);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+*/
+
+    exit(EXIT_SUCCESS);
+
 }
