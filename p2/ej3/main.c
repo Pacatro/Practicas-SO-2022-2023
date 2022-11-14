@@ -6,30 +6,31 @@
 
 #define N 10
 
-void write_in_array(int randArray[]){
-    int i;
+void write_in_array(int *randArray);
 
-    srand(time(NULL));
+void show_array(int *array, int n);
 
-    for(i = 0; i<N; i++){
-        randArray[i] = rand() % 10;
-    }
-}
-
-void show_array(int array[], int n){
-    for(int i = 0; i<n; i++){
-        printf("%d ", array[i]);
-    }
-}
-
-void divided_array(int randArray[], int array[], int num){
-    for(int i = 0; i<(N/num); i++){
-        array[i] = randArray[i];
-    }
-}
+struct divided_array{
+    int *v;
+    int init;
+    int end;
+};
 
 void *sum_elements_array(void *array){
+    struct divided_array *mid_array = (struct divided_array *) array;
+    int *result = malloc(sizeof(int));
+    *result = 0;
 
+    printf("\nThread with TID: %lu\n", pthread_self());
+    printf("Vector: ");
+    for(int i = mid_array->init; i<mid_array->end; i++){
+        printf("%d ", (mid_array->v)[i]);
+        *result += (mid_array->v)[i];
+    }
+    
+    printf("\nResult = %d\n", *result);
+
+    pthread_exit((void *) result);
 }
 
 int main(int argc, char **argv){
@@ -40,26 +41,42 @@ int main(int argc, char **argv){
         exit(EXIT_FAILURE);
     }
 
+    int num = atoi(argv[1]);
+
+    if(num != 2 && num != 5){
+        printf("ERROR, INCORRECT VALUE (2 OR 5)\n");
+        exit(EXIT_FAILURE);
+    }
+
     printf("Main thread!\n");
 
-    int num = atoi(argv[1]), i, j ,randArray[N];
+    int i, j ,randArray[N], total_result = 0, result;
     pthread_t threads[num];
+    void *result_return;
 
     write_in_array(randArray);
 
-    printf("Vector 1: ");
+    printf("Main array: ");
     show_array(randArray, N);
+    printf("\n");
 
-    int array[N/num];
+    struct divided_array struct_array[num];
 
-    divided_array(randArray, array, num);
+    int init = 0;
+    int end = (N/num)-1;
 
-    printf("\nVector 2: ");
-    show_array(array, N/num);
-
-/*
     for(i = 0; i<num; i++){
-        if(pthread_create(&threads[i], NULL, sum_elements_array, randArray)){
+        struct_array[i].v = randArray;
+
+        struct_array[i].init = init;
+        init += (N/num);
+
+        struct_array[i].end = end;
+        end += (N/num);
+    }
+
+    for(i = 0; i<num; i++){
+        if(pthread_create(&threads[i], NULL, sum_elements_array, (void *) &struct_array[i])){
             perror("Thread error");
             printf("errno = %d", errno);
             exit(EXIT_FAILURE);
@@ -67,15 +84,37 @@ int main(int argc, char **argv){
     }
 
     for(j = 0; j<num; j++){
-        if(pthread_join(threads[j], NULL)){
+        if(pthread_join(threads[j], &result_return)){
             perror("Join error");
             printf("errno = %d", errno);
             exit(EXIT_FAILURE);
         }
+
+        result = *(int *)result_return;
+
+        total_result += result;  
+
     }
 
-*/
+    printf("\nTotal result = %d\n", total_result);
 
     exit(EXIT_SUCCESS);
 
+}
+
+void write_in_array(int *randArray){
+    int i;
+
+    srand(time(NULL));
+
+    for(i = 0; i<N; i++){
+        randArray[i] = rand() % 10;
+    }
+}
+
+void show_array(int *array, int n){
+    int i;
+    for(i = 0; i < n; i++){
+        printf("%d ", array[i]);
+    }
 }
