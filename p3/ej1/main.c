@@ -3,23 +3,24 @@
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
+#include<unistd.h>
 
 #define N 10
 
 int tshirts[N]; //global array
 pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
+//---------------ADITIONAL-----------------
 void nRandomArray(int n, int *tshirts, int max);
 void show_tshirts(int n, int *tshirts);
 int generateNumber();
+//-----------------------------------------
 
 void *client_thread(void *arg){
-    int model, quantity, *argu;
+    int model, quantity;
 
-    argu = (int*) arg;
-
-    model = argu[0];
-    quantity = argu[1];
+    model = rand() % 11;
+    quantity = rand() % 10;
 
     printf("\nModel: %d\n", model);
     printf("Quantity: %d\n", quantity);
@@ -29,9 +30,43 @@ void *client_thread(void *arg){
         pthread_exit(NULL);
     }
 
-    tshirts[model] - quantity;
+    for(int i = 0; i < N; i++){
+        if(i == model){
+            tshirts[i] - quantity;
+        }
+    }    
 
     printf("The client %lu bought %d units from the model %d\n", pthread_self(), quantity, model);
+
+    if(pthread_mutex_unlock(&mtx) != 0){
+        printf("Mutex_unlock error...\n");
+        pthread_exit(NULL);
+    }
+
+    pthread_exit(NULL);
+}
+
+void *seller_thread(void *arg){
+    int model, quantity;
+
+    model = rand() % 11;
+    quantity = rand() % 10;
+
+    printf("\nModel: %d\n", model);
+    printf("Quantity: %d\n", quantity);
+
+    if(pthread_mutex_lock(&mtx) != 0){
+        printf("Mutex_lock error...\n");
+        pthread_exit(NULL);
+    }
+
+    for(int i = 0; i < N; i++){
+        if(i == model){
+            tshirts[i] + quantity;
+        }
+    }    
+
+    printf("The seller %lu add %d units to the model %d\n", pthread_self(), quantity, model);
 
     if(pthread_mutex_unlock(&mtx) != 0){
         printf("Mutex_unlock error...\n");
@@ -52,12 +87,12 @@ int main(int argc, char **argv){
     pthread_t clients[n], sellers[m];
 
     nRandomArray(N, tshirts, 100);
-    nRandomArray(2, arg, 10);
     
     printf("Tshirts on sale: ");
     show_tshirts(N, tshirts);
     printf("\n");
 
+//-----------Creating threads-----------
     for(int i = 0; i<n; i++){
         if(pthread_create(&clients[i], NULL, client_thread, (void *)arg)){
             perror("Can't create clients threads");
@@ -67,6 +102,15 @@ int main(int argc, char **argv){
     }
 
     for(int i = 0; i<n; i++){
+        if(pthread_create(&sellers[i], NULL, seller_thread, (void *)arg)){
+            perror("Can't create sellers threads");
+            printf("errno = %d", errno);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+//-----------Joining threads-----------
+    for(int i = 0; i<n; i++){
         if(pthread_join(clients[i], NULL)){
             perror("Can't create clients threads");
             printf("errno = %d", errno);
@@ -74,7 +118,15 @@ int main(int argc, char **argv){
         }
     }
 
-    printf("Tshirts on sale: ");
+    for(int i = 0; i<n; i++){
+        if(pthread_join(sellers[i], NULL)){
+            perror("Can't create sellers threads");
+            printf("errno = %d", errno);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    printf("\nTshirts on sale: ");
     show_tshirts(N, tshirts);
     printf("\n");
 
