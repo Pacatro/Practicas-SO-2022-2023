@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
-#include<unistd.h>
 
 #define N 10
 
@@ -13,30 +12,26 @@ pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 //---------------ADITIONAL-----------------
 void nRandomArray(int n, int *tshirts, int max);
 void show_tshirts(int n, int *tshirts);
-int generateNumber();
 //-----------------------------------------
 
 void *client_thread(void *arg){
     int model, quantity;
 
     model = rand() % 11;
-    quantity = rand() % 10;
-
-    printf("\nModel: %d\n", model);
-    printf("Quantity: %d\n", quantity);
+    quantity = rand() % 11;
 
     if(pthread_mutex_lock(&mtx) != 0){
         printf("Mutex_lock error...\n");
         pthread_exit(NULL);
     }
 
-    for(int i = 0; i < N; i++){
-        if(i == model){
-            tshirts[i] - quantity;
-        }
-    }    
+    tshirts[model] -= quantity;
 
-    printf("The client %lu bought %d units from the model %d\n", pthread_self(), quantity, model);
+    if(tshirts[model] < 0){
+        tshirts[model] = 0;
+    } 
+
+    printf("\nThe client %lu bought %d units from the model %d\n", pthread_self(), quantity, model);
 
     if(pthread_mutex_unlock(&mtx) != 0){
         printf("Mutex_unlock error...\n");
@@ -50,23 +45,16 @@ void *seller_thread(void *arg){
     int model, quantity;
 
     model = rand() % 11;
-    quantity = rand() % 10;
-
-    printf("\nModel: %d\n", model);
-    printf("Quantity: %d\n", quantity);
+    quantity = rand() % 11;
 
     if(pthread_mutex_lock(&mtx) != 0){
         printf("Mutex_lock error...\n");
         pthread_exit(NULL);
     }
 
-    for(int i = 0; i < N; i++){
-        if(i == model){
-            tshirts[i] + quantity;
-        }
-    }    
+    tshirts[model] += quantity;
 
-    printf("The seller %lu add %d units to the model %d\n", pthread_self(), quantity, model);
+    printf("\nThe seller %lu add %d units to the model %d\n", pthread_self(), quantity, model);
 
     if(pthread_mutex_unlock(&mtx) != 0){
         printf("Mutex_unlock error...\n");
@@ -79,7 +67,7 @@ void *seller_thread(void *arg){
 int main(int argc, char **argv){
     if(argc != 3){
         perror("You need to write the number of clients (n) and sellers (m)");
-        printf("./ej1.exe N M\nerrno = %d", errno);
+        printf("./ej1.exe N M\nerrno = %d\n", errno);
         exit(EXIT_FAILURE);
     }
 
@@ -101,7 +89,7 @@ int main(int argc, char **argv){
         }
     }
 
-    for(int i = 0; i<n; i++){
+    for(int i = 0; i<m; i++){
         if(pthread_create(&sellers[i], NULL, seller_thread, (void *)arg)){
             perror("Can't create sellers threads");
             printf("errno = %d", errno);
@@ -118,7 +106,7 @@ int main(int argc, char **argv){
         }
     }
 
-    for(int i = 0; i<n; i++){
+    for(int i = 0; i<m; i++){
         if(pthread_join(sellers[i], NULL)){
             perror("Can't create sellers threads");
             printf("errno = %d", errno);
