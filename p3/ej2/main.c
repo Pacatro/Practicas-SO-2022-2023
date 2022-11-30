@@ -14,10 +14,8 @@ void nRandomArray(int n, int *array);
 //-----------------------------------
 
 void *add(void *value){
-    int index = *(int*) value, randoms[5], *total = (int *)malloc(sizeof(int)), i, j;
+    int index = *(int*) value, randoms[5], *total = (int *)malloc(sizeof(int));
     *total = 0;
-
-    printf("Thread %lu, with index %d\n", pthread_self(), index);
 
     if(pthread_mutex_lock(&mtx) != 0){
         printf("Mutex_lock error...\n");
@@ -27,19 +25,18 @@ void *add(void *value){
     nRandomArray(5, randoms);
 
     if(index % 2 == 0){
-        printf("Adding pares....\n");        
-        for(i = 0; i < 5; i++){
+        for(int i = 0; i < 5; i++){
             par += randoms[i];
+            *total += randoms[i];
+
         }
 
     } else{
-        printf("Adding impares....\n");
-        for(j = 0; j < 5; j++){
-            impar += randoms[j];
+        for(int i = 0; i < 5; i++){
+            impar += randoms[i];
+            *total += randoms[i];
         }
     }
-
-    *total += par + impar;
 
     if(pthread_mutex_unlock(&mtx) != 0){
         printf("Mutex_unlock error...\n");
@@ -77,12 +74,10 @@ int main(int argc, char **argv){
             exit(EXIT_FAILURE);
         }
 
-        total_int += *(int*)total;
+        printf("Thread with index %d return total value: %d\n", values[i], *(int*)total);
     }
 
     printf("\nPar = %d\nImpar = %d\nTotal = %d\n", par, impar, *(int*)total);
-
-    printf("\nGlobal total = %d\n", total_int);
 
     exit(EXIT_SUCCESS);
 }
@@ -94,8 +89,6 @@ void nArray(int n, int *array){
 }
 
 void nRandomArray(int n, int *array){
-    srand(time(NULL));
-    
     for(int i = 0; i < n; i++){
         array[i] = rand() % 11;
     }
