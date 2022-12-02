@@ -21,7 +21,7 @@ el control de errores.
 
 
 /*Todo lo que hay a continuacion se podria reservar en el monticulo desde
-el main usando mallloc(), pruebe a hacer el ejercicio de esta manera*/
+el main usando malloc(), pruebe a hacer el ejercicio de esta manera*/
 
 /* Esta es la variable de la que no se puede leer y escribir a la vez */
 int dato = 0; 
