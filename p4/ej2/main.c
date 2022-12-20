@@ -102,7 +102,7 @@ int main(int argc, char **argv){
         }
     }
 
-    printf("Count    variable = %d\n", count);
+    printf("Count variable = %d\n", count);
 
     //------------DISASSOCIATE SHARED MEMORY------------//
     if(shmdt((char *)memory) == -1){

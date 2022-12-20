@@ -39,6 +39,7 @@ int main(int argc, char **argv){
     if(memory == NULL){
         printf("Can't point to the shared memory\n");
         printf("errno = %d, %s\n", errno, strerror(errno));
+        exit(EXIT_FAILURE);
     }
 
     int count = *memory;
