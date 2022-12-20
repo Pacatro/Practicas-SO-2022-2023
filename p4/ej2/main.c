@@ -59,7 +59,8 @@ int main(int argc, char **argv){
 
     memory = sharing_memory();
 
-    *memory = 0;
+    int count = *memory;
+    count = 0;
 
     for(int i = 0; i<N; i++){
         childpid = fork();
@@ -78,7 +79,7 @@ int main(int argc, char **argv){
                     exit(EXIT_FAILURE);
                 }
 
-                *memory += 100;
+                count += 100;
 
                 if(sem_post(&sem) != 0){
                     printf("sem_post error...\n");
@@ -101,7 +102,7 @@ int main(int argc, char **argv){
         }
     }
 
-    printf("Memory variable = %d\n", *memory);
+    printf("Count    variable = %d\n", count);
 
     //------------DISASSOCIATE SHARED MEMORY------------//
     if(shmdt((char *)memory) == -1){

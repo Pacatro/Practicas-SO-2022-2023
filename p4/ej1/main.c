@@ -41,7 +41,8 @@ int main(int argc, char **argv){
         printf("errno = %d, %s\n", errno, strerror(errno));
     }
 
-    *memory = 0;
+    int count = *memory;
+    count = 0;
 
     for(int i = 0; i<N; i++){
         childpid = fork();
@@ -54,7 +55,7 @@ int main(int argc, char **argv){
             case 0:
                 printf("I'm the child with ID: %d and my father has ID: %d\n", getpid(), getppid());
 
-                *memory += 100;
+                count += 100;
             break; 
 
             default:
@@ -70,7 +71,7 @@ int main(int argc, char **argv){
         }
     }
 
-    printf("Memory variable = %d\n", *memory);
+    printf("Count variable = %d\n", count);
 
     //------------DISASSOCIATE SHARED MEMORY------------//
     if(shmdt((char *)memory) == -1){
