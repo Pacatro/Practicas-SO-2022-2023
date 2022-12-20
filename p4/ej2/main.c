@@ -5,16 +5,12 @@
 #include <sys/wait.h>
 #include <sys/shm.h>
 #include <string.h>
+#include <semaphore.h>
 
-int main(int argc, char **argv){
-    if(argc != 2){
-        printf("Error, you must write the number of process that you want to create.\nerrno = %d.\n", errno);
-        exit(EXIT_FAILURE);
-    }
+sem_t sem;
 
-    int N = atoi(argv[1]), status;
-    pid_t childpid, flag;
-    int *memory = NULL, id_memory;
+int *sharing_memory(){
+    int id_memory, *memory;
 
     //-----CREATING A KEY FOR SHARED MEMORY-----//
     key_t key = ftok(".", 33);
@@ -41,6 +37,28 @@ int main(int argc, char **argv){
         printf("errno = %d, %s\n", errno, strerror(errno));
     }
 
+    return memory;
+}
+
+int main(int argc, char **argv){
+    if(argc != 2){
+        printf("Error, you must write the number of process that you want to create.\nerrno = %d.\n", errno);
+        exit(EXIT_FAILURE);
+    }
+
+    int N = atoi(argv[1]), status;
+    pid_t childpid, flag;
+    int *memory = NULL;
+
+    //-----INITIALIZING SEMAPHORE-----//
+    if(sem_init(&sem, 1, 1) != 0){
+        printf("sem_init error\n");
+        printf("errno value = %d, %s", errno, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    memory = sharing_memory();
+
     *memory = 0;
 
     for(int i = 0; i<N; i++){
@@ -54,7 +72,20 @@ int main(int argc, char **argv){
             case 0:
                 printf("I'm the child with ID: %d and my father has ID: %d\n", getpid(), getppid());
 
+                if(sem_wait(&sem) != 0){
+                    printf("sem_wait error...\n");
+                    printf("errno value= %d --> %s\n", errno, strerror(errno));
+                    exit(EXIT_FAILURE);
+                }
+
                 *memory += 100;
+
+                if(sem_post(&sem) != 0){
+                    printf("sem_post error...\n");
+                    printf("errno value= %d definido como %s\n", errno, strerror(errno));
+                    exit(EXIT_FAILURE);
+                }
+
             break; 
 
             default:
