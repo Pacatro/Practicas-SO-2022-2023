@@ -8,7 +8,7 @@
 #include "functions.h"
 
 void child1(char **argv){
-    if(system(argv[1]) == -1){
+    if(execlp(argv[1], argv[1], NULL) == -1){
         perror("Can't excute calculator");
         printf("errno value = %d\n", errno);
         exit(EXIT_FAILURE);
