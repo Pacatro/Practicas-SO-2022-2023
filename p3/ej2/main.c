@@ -1,95 +1,97 @@
-#include <pthread.h> 
-#include <stdlib.h> 
 #include <stdio.h>
-#include <errno.h>
+#include <stdlib.h>
+#include <pthread.h>
 #include <time.h>
 
-int par = 0, impar = 0; //Global
+int par = 0, impar = 0;
 
-pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 
-//------------ADITIONAL------------
-void nArray(int n, int *array);
-void nRandomArray(int n, int *array);
-//-----------------------------------
+void take_index(int array[], int n);
+void random_array(int *array, int n);
 
-void *add(void *value){
-    int index = *(int*) value, randoms[5], *total = (int *)malloc(sizeof(int));
-    *total = 0;
+void *thread(void *arg){
+    int index = *(int *)arg, random[5], *total = (int *)malloc(sizeof(int));
 
-    if(pthread_mutex_lock(&mtx) != 0){
-        printf("Mutex_lock error...\n");
+    random_array(random, 5);
+
+    if(pthread_mutex_lock(&m) != 0){
+        printf("Mutex lock error\n");
         pthread_exit(NULL);
     }
 
-    nRandomArray(5, randoms);
-
-    if(index % 2 == 0){
-        for(int i = 0; i < 5; i++){
-            par += randoms[i];
-            *total += randoms[i];
-
-        }
-
-    } else{
-        for(int i = 0; i < 5; i++){
-            impar += randoms[i];
-            *total += randoms[i];
+    for(int i = 0; i<5; i++){
+        if(index % 2 == 0){
+            par += random[i];
+            *total += random[i];
+        } else{
+            impar += random[i];
+            *total += random[i];
         }
     }
 
-    if(pthread_mutex_unlock(&mtx) != 0){
-        printf("Mutex_unlock error...\n");
+    if(pthread_mutex_unlock(&m) != 0){
+        printf("Mutex unlock error\n");
         pthread_exit(NULL);
     }
 
-    pthread_exit((void*) total);
+    pthread_exit((void *)total);
 }
 
 int main(int argc, char **argv){
+    srand(time(NULL));
+
     if(argc != 2){
-        perror("You need to write the number of threads (n)");
-        printf("./ej2.exe N\nerrno = %d\n", errno);
+        printf("You must write the number of threads that you want.\n./ej2.exe N\n");
         exit(EXIT_FAILURE);
     }
 
-    int n = atoi(argv[1]), values[n], total_int = 0;
-    void *total;
+    int n = atoi(argv[1]), n_order[n], add, impar_sum = 0, par_sum = 0;
     pthread_t threads[n];
+    void *sum;
 
-    nArray(n, values);
+    take_index(n_order, n);
 
     for(int i = 0; i<n; i++){
-        if(pthread_create(&threads[i], NULL, add, (void *)&values[i])){
-            perror("Can't create clients threads");
-            printf("errno = %d", errno);
+        if(pthread_create(&threads[i], NULL, thread, (void *)&n_order[i]) != 0){
+            printf("Create error\n");
             exit(EXIT_FAILURE);
         }
     }
 
     for(int i = 0; i<n; i++){
-        if(pthread_join(threads[i], &total)){
-            perror("Can't create clients threads");
-            printf("errno = %d", errno);
+        if(pthread_join(threads[i], &sum) != 0){
+            printf("Join error\n");
             exit(EXIT_FAILURE);
         }
 
-        printf("Thread with index %d return total value: %d\n", values[i], *(int*)total);
+        add = *(int *)sum;
+
+        printf("Main --> Thread with index %d return sum value: %d\n", n_order[i], add);
+
+        if(n_order[i] % 2 == 0) par_sum += add;
+
+        else impar_sum += add;
     }
 
-    printf("\nPar = %d\nImpar = %d\nTotal = %d\n", par, impar, *(int*)total);
+    printf("\nMain --> Impar variable value: %d\n", impar);
+    printf("Main --> Sum of return values created by impar thread: %d\n", impar_sum);
+
+
+    printf("\nMain --> Par variable value: %d\n", par);
+    printf("Main --> Sum of return values created by par thread: %d\n", par_sum);
 
     exit(EXIT_SUCCESS);
 }
 
-void nArray(int n, int *array){
-    for(int i = 0; i < n; i++){
+void take_index(int array[], int n){
+    for(int i = 0; i<n; i++){
         array[i] = i+1;
     }
 }
 
-void nRandomArray(int n, int *array){
-    for(int i = 0; i < n; i++){
+void random_array(int *array, int n){    
+    for(int i = 0; i<n; i++){
         array[i] = rand() % 11;
     }
 }
